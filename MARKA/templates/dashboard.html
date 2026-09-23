@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MARKA | Every Journey Leaves a Mark</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <!-- Leaflet CSS for Live Tracking Map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+    <!-- Modern Dashboard CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+</head>
+<body>
+
+<div class="app-layout">
+
+    <!-- =====================================================
+         SIDEBAR NAVIGATION
+    ====================================================== -->
+    <aside class="app-sidebar">
+        <div>
+            <!-- Header Brand -->
+            <div class="sidebar-header">
+                <div class="brand-wrapper">
+                    <div class="brand-logo-icon">
+                        <i class="bi bi-compass-fill"></i>
+                    </div>
+                    <div class="brand-details">
+                        <strong>MARKA <span class="prototype-badge">PROTOTYPE</span></strong>
+                        <span class="brand-tagline">Every Journey Leaves a Mark.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="sidebar-nav">
+                <div class="nav-section-title">INTELLIGENCE</div>
+                
+                <a href="/dashboard" class="nav-item active">
+                    <i class="bi bi-grid-1x2-fill"></i>
+                    <span>Overview</span>
+                </a>
+
+                <a href="/tracking" class="nav-item">
+                    <i class="bi bi-geo-alt-fill"></i>
+                    <span>Live Tracking</span>
+                    <span class="live-beacon">
+                        <span class="beacon-pulse"></span>
+                        LIVE
+                    </span>
+                </a>
+
+                <a href="/analytics" class="nav-item">
+                    <i class="bi bi-bar-chart-line-fill"></i>
+                    <span>Analytics</span>
+                </a>
+
+                <div class="nav-section-title">MANAGEMENT</div>
+
+                <a href="/goals" class="nav-item">
+                    <i class="bi bi-bullseye"></i>
+                    <span>My Goals</span>
+                </a>
+
+                <a href="/challenges" class="nav-item">
+                    <i class="bi bi-trophy-fill"></i>
+                    <span>Challenges</span>
+                </a>
+
+                <a href="/reports" class="nav-item">
+                    <i class="bi bi-file-earmark-bar-graph-fill"></i>
+                    <span>Reports</span>
+                </a>
+            </nav>
+        </div>
+
+        <!-- Sidebar Footer -->
+        <div class="sidebar-footer">
+            <div class="eco-tier-box">
+                <div class="eco-tier-header">
+                    <span>ECO LEVEL</span>
+                    <span class="tier-badge">Level 4</span>
+                </div>
+                <div class="tier-progress-track">
+                    <div class="tier-progress-fill" id="kpiScoreBarFill"></div>
+                </div>
+                <small><strong>Green Conservator</strong> &bull; Top 12%</small>
+            </div>
+
+            <div class="user-snippet">
+                <div class="user-avatar-badge">B</div>
+                <div class="user-text-info">
+                    <strong>Bharavi</strong>
+                    <span>Eco Specialist</span>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- =====================================================
+         MAIN CONTENT AREA
+    ====================================================== -->
+    <main class="app-main">
+
+        <!-- STICKY TOPBAR -->
+        <header class="topbar">
+            <div class="topbar-left">
+                <button class="mobile-menu-btn" id="mobileMenuBtn">
+                    <i class="bi bi-list"></i>
+                </button>
+                <div>
+                    <span class="breadcrumb-label">MARKA Prototype &bull; Environmental Intelligence</span>
+                    <h2 class="topbar-page-title">Executive Dashboard</h2>
+                </div>
+            </div>
+
+            <div class="topbar-right">
+                <!-- Location Pill Badge -->
+                <div class="location-pill-badge" id="topbarLocationBadge" onclick="autoRequestDeviceLocation()" title="Click to re-acquire device GPS">
+                    <i class="bi bi-geo-alt-fill"></i>
+                    <strong id="currentPlaceName">Locating near Dhule / Delhi...</strong>
+                </div>
+
+                <!-- Live Tracking Pill -->
+                <div class="live-pill-badge" id="topbarLiveStatusPill">
+                    <span class="status-dot"></span>
+                    <span id="liveStatusText">System Idle</span>
+                </div>
+
+                <!-- Simulation Trigger Shortcut -->
+                <button class="btn-secondary-action" onclick="startSimulatedDrive()">
+                    <i class="bi bi-play-circle-fill" style="color: #6366f1;"></i>
+                    <span>Simulate Drive</span>
+                </button>
+
+                <!-- Notifications -->
+                <button class="btn-icon" title="Notifications">
+                    <i class="bi bi-bell"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- DASHBOARD CONTAINER -->
+        <div class="dashboard-container">
+
+            <!-- WELCOME HEADER -->
+            <div class="welcome-hero">
+                <div class="welcome-title-group">
+                    <h1>Real-Time Environmental Impact</h1>
+                    <p>Automated vehicle passenger emissions accounting and journey monitoring.</p>
+                </div>
+                <div class="date-pill">
+                    <i class="bi bi-calendar3"></i>
+                    <span id="currentDateStr">Today</span>
+                </div>
+            </div>
+
+            <!-- =====================================================
+                 KPI CARDS GRID
+            ====================================================== -->
+            <section class="kpi-cards-grid">
+
+                <!-- 1. PASSENGER FOOTPRINT TODAY -->
+                <div class="kpi-card highlight">
+                    <div class="kpi-header">
+                        <span class="kpi-label">YOUR PASSENGER FOOTPRINT</span>
+                        <div class="kpi-icon-badge emerald">
+                            <i class="bi bi-person-walking"></i>
+                        </div>
+                    </div>
+                    <div class="kpi-value-row">
+                        <span class="kpi-value" id="kpiTodayPassengerCarbon">0.00</span>
+                        <span class="kpi-unit">kg CO₂e</span>
+                    </div>
+                    <div class="kpi-meta">
+                        <span class="badge-pill-positive">
+                            <i class="bi bi-check2"></i> Live Calculated
+                        </span>
+                        <span>Today's allocated share</span>
+                    </div>
+                    <div class="formula-chip">
+                        <i class="bi bi-calculator"></i>
+                        <span id="kpiPassengerFormula">Vehicle CO₂ &divide; Passengers</span>
+                    </div>
+                </div>
+
+                <!-- 2. GROSS VEHICLE CARBON -->
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <span class="kpi-label">GROSS VEHICLE EMISSIONS</span>
+                        <div class="kpi-icon-badge amber">
+                            <i class="bi bi-car-front-fill"></i>
+                        </div>
+                    </div>
+                    <div class="kpi-value-row">
+                        <span class="kpi-value" id="kpiTodayTotalCarbon">0.00</span>
+                        <span class="kpi-unit">kg CO₂e</span>
+                    </div>
+                    <div class="kpi-meta">
+                        <span class="badge-pill-neutral">Total tailpipe</span>
+                        <span>Shared among occupants</span>
+                    </div>
+                    <div class="formula-chip">
+                        <i class="bi bi-people-fill"></i>
+                        <span id="kpiAvgPassengers">Average 2.4 pass / trip</span>
+                    </div>
+                </div>
+
+                <!-- 3. CARBON AVOIDED / SAVED -->
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <span class="kpi-label">CARBON SAVED (CARPOOL)</span>
+                        <div class="kpi-icon-badge sky">
+                            <i class="bi bi-shield-fill-check"></i>
+                        </div>
+                    </div>
+                    <div class="kpi-value-row">
+                        <span class="kpi-value" id="kpiTodayCarbonSaved">0.00</span>
+                        <span class="kpi-unit">kg CO₂</span>
+                    </div>
+                    <div class="kpi-meta">
+                        <span class="badge-pill-positive">
+                            <i class="bi bi-arrow-up-right"></i> +68% Efficiency
+                        </span>
+                        <span>vs driving solo</span>
+                    </div>
+                    <div class="formula-chip">
+                        <i class="bi bi-stars"></i>
+                        <span id="kpiWeekSaved">0.0 kg avoided this week</span>
+                    </div>
+                </div>
+
+                <!-- 4. DISTANCE & GREEN SCORE -->
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <span class="kpi-label">TODAY'S TRAVEL DISTANCE</span>
+                        <div class="kpi-icon-badge indigo">
+                            <i class="bi bi-geo-alt-fill"></i>
+                        </div>
+                    </div>
+                    <div class="kpi-value-row">
+                        <span class="kpi-value" id="kpiTodayDistance">0.00</span>
+                        <span class="kpi-unit">km</span>
+                    </div>
+                    <div class="kpi-meta">
+                        <span class="badge-pill-neutral">
+                            <i class="bi bi-speedometer2"></i> GPS Tracking
+                        </span>
+                        <span>All recorded routes</span>
+                    </div>
+                    <div class="formula-chip">
+                        <i class="bi bi-award"></i>
+                        <span>Green Score: <strong id="kpiGreenScore">820</strong> / 1000</span>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- =====================================================
+                 CORE LIVE VEHICLE & PASSENGER TRACKING SECTION
+            ====================================================== -->
+            <section class="live-tracking-panel">
+
+                <!-- Panel Top Header Strip -->
+                <div class="panel-header-strip">
+                    <div class="strip-left">
+                        <div class="pulse-radar-icon">
+                            <i class="bi bi-broadcast"></i>
+                        </div>
+                        <div class="strip-title">
+                            <h2>Automated Vehicle Passenger Footprint Tracker</h2>
+                            <span>Real-time GPS tracking with dynamic occupancy emission division</span>
+                        </div>
+                    </div>
+                    <div class="strip-actions">
+                        <span class="badge-pill-positive" style="font-size: 12px; padding: 4px 10px;">
+                            <i class="bi bi-cpu-fill"></i> Dynamic GHG Protocol Algorithm
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Panel Body Grid: Controls Sidebar + Live Map & HUD -->
+                <div class="panel-body-grid">
+
+                    <!-- LEFT: Vehicle Selection & Passenger Configuration -->
+                    <div class="tracking-controls-sidebar">
+
+                        <!-- 1. JOURNEY ROUTE PLANNER (USER INPUT FOR START & END) -->
+                        <div class="route-planner-card">
+                            <div class="config-group-title">
+                                <span>Journey Route Planner</span>
+                                <i class="bi bi-geo-alt" title="Enter your start and destination points"></i>
+                            </div>
+
+                            <div class="route-input-group">
+                                <!-- Origin Input Container -->
+                                <div>
+                                    <div class="route-input-row">
+                                        <i class="bi bi-geo-alt-fill route-input-icon origin"></i>
+                                        <input type="text" id="originInput" class="route-input-field" value="Dhule, Maharashtra" placeholder="Starting location (e.g. Dhule)..." autocomplete="off">
+                                        <div style="position: absolute; right: 6px; display: flex; align-items: center; gap: 3px;">
+                                            <button type="button" class="route-input-action-btn" onclick="activateMapPicker('origin')" title="Click & Pick on Map" style="position: static;">
+                                                <i class="bi bi-pin-map-fill"></i>
+                                            </button>
+                                            <button type="button" class="route-input-action-btn" onclick="autoRequestDeviceLocation()" title="Detect current GPS device location" style="position: static;">
+                                                <i class="bi bi-crosshair"></i>
+                                            </button>
+                                        </div>
+                                        <!-- Autocomplete Dropdown -->
+                                        <div id="originDropdown" class="location-autocomplete-dropdown"></div>
+                                    </div>
+                                    <div id="originVerifiedTag" class="verified-location-tag">
+                                        <i class="bi bi-check-circle-fill"></i> <span id="originVerifiedText">Verified: Dhule, Maharashtra (20.904°N, 74.775°E)</span>
+                                    </div>
+                                </div>
+
+                                <!-- Route Corridor Header & Swap -->
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin:-2px 6px -2px 0;">
+                                    <span style="font-size:10px; color:var(--slate-400); font-weight:700; letter-spacing:0.4px;">HIGHWAY CORRIDOR</span>
+                                    <button type="button" onclick="swapLocations()" style="background:none; border:none; cursor:pointer; font-size:11px; font-weight:600; color:var(--primary); display:flex; align-items:center; gap:3px;">
+                                        <i class="bi bi-arrow-down-up"></i> Swap
+                                    </button>
+                                </div>
+
+                                <!-- Destination Input Container -->
+                                <div>
+                                    <div class="route-input-row">
+                                        <i class="bi bi-flag-fill route-input-icon destination"></i>
+                                        <input type="text" id="destInput" class="route-input-field" value="New Delhi, Delhi" placeholder="Choose destination (e.g. Delhi, Nashik, Pune)..." autocomplete="off">
+                                        <button type="button" class="route-input-action-btn" onclick="activateMapPicker('dest')" title="Click & Pick on Map" style="right: 6px;">
+                                            <i class="bi bi-pin-map-fill"></i>
+                                        </button>
+                                        <!-- Autocomplete Dropdown -->
+                                        <div id="destDropdown" class="location-autocomplete-dropdown"></div>
+                                    </div>
+                                    <div id="destVerifiedTag" class="verified-location-tag">
+                                        <i class="bi bi-check-circle-fill"></i> <span id="destVerifiedText">Verified: New Delhi, Delhi (28.614°N, 77.209°E)</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Popular quick destination chips -->
+                            <div class="popular-destinations-row">
+                                <span class="dest-chip active" onclick="fillDestination('Delhi')">📍 Delhi NCR</span>
+                                <span class="dest-chip" onclick="fillDestination('Nashik')">📍 Nashik (158 km)</span>
+                                <span class="dest-chip" onclick="fillDestination('Mumbai')">📍 Mumbai (325 km)</span>
+                                <span class="dest-chip" onclick="fillDestination('Pune')">📍 Pune (335 km)</span>
+                                <span class="dest-chip" onclick="fillDestination('Indore')">📍 Indore (260 km)</span>
+                            </div>
+
+                            <!-- Road Route Traced Summary Card -->
+                            <div id="roadRouteSummaryCard" class="road-route-summary-card" style="display: none;">
+                                <div class="route-badge-text">
+                                    <i class="bi bi-signpost-2-fill"></i>
+                                    <span><strong id="roadRouteSummaryDist">984 km</strong> (<span id="roadRouteSummaryTime">~11h</span>)</span>
+                                </div>
+                                <div class="route-meta-text" id="roadRouteSummaryVia">via NH 52 & NH 48</div>
+                            </div>
+
+                            <button class="btn-plan-route" onclick="planCustomJourney()">
+                                <i class="bi bi-map-fill"></i>
+                                <span>Trace Road Network & Calculate</span>
+                            </button>
+                        </div>
+
+                        <!-- 2. REAL-TIME TRAVEL TELEMETRY & EMISSION MONITOR -->
+                        <div class="live-telemetry-deck">
+                            <div class="telemetry-deck-header">
+                                <div class="telemetry-deck-badge">
+                                    <span class="pulse-circle"></span>
+                                    <span>Live Travel Telemetry</span>
+                                </div>
+                                <span class="badge-pill-positive" style="font-size: 10px; padding: 2px 7px;">
+                                    Continuous Monitoring
+                                </span>
+                            </div>
+
+                            <!-- Telemetry 2x2 Grid -->
+                            <div class="telemetry-vitals-grid">
+                                <div class="vital-tile">
+                                    <div class="vital-tile-label">
+                                        <i class="bi bi-activity" style="color: #38bdf8;"></i> Emission Rate
+                                    </div>
+                                    <div class="vital-tile-number rate">
+                                        <span id="vitalBurnRate">0</span> <span class="vital-tile-unit">g/min</span>
+                                    </div>
+                                </div>
+
+                                <div class="vital-tile">
+                                    <div class="vital-tile-label">
+                                        <i class="bi bi-fire" style="color: #34d399;"></i> Your Footprint
+                                    </div>
+                                    <div class="vital-tile-number footprint">
+                                        <span id="vitalPassengerCarbon">0.00</span> <span class="vital-tile-unit">kg CO₂</span>
+                                    </div>
+                                </div>
+
+                                <div class="vital-tile">
+                                    <div class="vital-tile-label">
+                                        <i class="bi bi-signpost-split"></i> Total Corridor
+                                    </div>
+                                    <div class="vital-tile-number">
+                                        <span id="plannedDistanceDisplay">1,040 km</span>
+                                    </div>
+                                </div>
+
+                                <div class="vital-tile">
+                                    <div class="vital-tile-label">
+                                        <i class="bi bi-calculator"></i> Est. Trip Total
+                                    </div>
+                                    <div class="vital-tile-number">
+                                        <span id="vitalTripEstimatedFootprint">93.6 kg</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Route Progress Bar -->
+                            <div class="journey-progress-labels">
+                                <span id="originCityLabel">Dhule</span>
+                                <span id="journeyProgressKm">0.0 / 1040 km (<span id="journeyProgressPct">0%</span>)</span>
+                                <span id="destCityLabel">Delhi</span>
+                            </div>
+                            <div class="journey-progress-track">
+                                <div class="journey-progress-fill" id="journeyProgressFill"></div>
+                            </div>
+                        </div>
+
+                        <!-- 3. VEHICLE PROFILE SELECTOR -->
+                        <div>
+                            <div class="config-group-title">
+                                <span>Vehicle Profile</span>
+                                <i class="bi bi-info-circle" title="Defines baseline tailpipe emission factors"></i>
+                            </div>
+
+                            <div class="vehicle-selector-grid">
+                                <button class="vehicle-btn selected" data-vehicle="petrol_sedan" onclick="selectVehicle('petrol_sedan')">
+                                    <div class="vehicle-btn-top">
+                                        <i class="bi bi-car-front-fill"></i>
+                                        <span class="vehicle-rate-pill">180g/km</span>
+                                    </div>
+                                    <span class="vehicle-name-label">Sedan (Petrol)</span>
+                                </button>
+
+                                <button class="vehicle-btn" data-vehicle="diesel_suv" onclick="selectVehicle('diesel_suv')">
+                                    <div class="vehicle-btn-top">
+                                        <i class="bi bi-truck-front-fill"></i>
+                                        <span class="vehicle-rate-pill">230g/km</span>
+                                    </div>
+                                    <span class="vehicle-name-label">Diesel SUV</span>
+                                </button>
+
+                                <button class="vehicle-btn" data-vehicle="hybrid_car" onclick="selectVehicle('hybrid_car')">
+                                    <div class="vehicle-btn-top">
+                                        <i class="bi bi-ev-front-fill"></i>
+                                        <span class="vehicle-rate-pill">105g/km</span>
+                                    </div>
+                                    <span class="vehicle-name-label">Hybrid Car</span>
+                                </button>
+
+                                <button class="vehicle-btn" data-vehicle="electric_car" onclick="selectVehicle('electric_car')">
+                                    <div class="vehicle-btn-top">
+                                        <i class="bi bi-lightning-charge-fill"></i>
+                                        <span class="vehicle-rate-pill">45g/km</span>
+                                    </div>
+                                    <span class="vehicle-name-label">Electric EV</span>
+                                </button>
+
+                                <button class="vehicle-btn" data-vehicle="public_bus" onclick="selectVehicle('public_bus')">
+                                    <div class="vehicle-btn-top">
+                                        <i class="bi bi-bus-front-fill"></i>
+                                        <span class="vehicle-rate-pill">1150g/km</span>
+                                    </div>
+                                    <span class="vehicle-name-label">Public Bus</span>
+                                </button>
+
+                                <button class="vehicle-btn" data-vehicle="motorbike" onclick="selectVehicle('motorbike')">
+                                    <div class="vehicle-btn-top">
+                                        <i class="bi bi-bicycle"></i>
+                                        <span class="vehicle-rate-pill">95g/km</span>
+                                    </div>
+                                    <span class="vehicle-name-label">Motorbike</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 4. PASSENGER OCCUPANCY STEPPER -->
+                        <div class="occupancy-card">
+                            <div class="config-group-title" style="margin-bottom: 4px;">
+                                <span>Vehicle Occupancy</span>
+                                <span style="font-size: 10px; color: #059669; font-weight:700;">LIVE ALLOCATION</span>
+                            </div>
+
+                            <div class="occupancy-stepper">
+                                <button class="stepper-btn" onclick="updatePassengerCount(-1)">
+                                    <i class="bi bi-dash"></i>
+                                </button>
+
+                                <div class="occupancy-display">
+                                    <div class="occupancy-count" id="passengerCountDisplay">2</div>
+                                    <span>Occupant(s) Sharing Ride</span>
+                                </div>
+
+                                <button class="stepper-btn" onclick="updatePassengerCount(1)">
+                                    <i class="bi bi-plus"></i>
+                                </button>
+                            </div>
+
+                            <!-- Visual seat icons -->
+                            <div class="passenger-icons-row" id="passengerIconsRow"></div>
+
+                            <!-- Live formula explanation -->
+                            <div class="passenger-allocation-math" id="passengerMathDisplay">
+                                <span>Vehicle emits <strong>180g CO₂/km</strong>.</span><br>
+                                <span>Shared by <strong>2 passengers</strong> = <strong>90g CO₂/km</strong> per person.</span>
+                            </div>
+                        </div>
+
+                        <!-- 5. ACTION TRIGGERS -->
+                        <div class="tracking-trigger-buttons" id="trackingTriggerButtons">
+                            <button class="btn-simulate-drive" onclick="startSimulatedDrive()">
+                                <i class="bi bi-play-circle-fill"></i>
+                                <span>Start Live Journey Tracking</span>
+                            </button>
+
+                            <button class="btn-start-gps" onclick="startLiveGpsTracking()">
+                                <i class="bi bi-crosshair"></i>
+                                <span>Start Real Device GPS</span>
+                            </button>
+                        </div>
+
+                        <!-- In-Progress Active Tracking Actions -->
+                        <div class="btn-active-actions" id="trackingActiveActions">
+                            <button class="btn-pause-tracking" id="btnPauseTracking" onclick="pauseTracking()">
+                                <i class="bi bi-pause-fill"></i>
+                                <span>Pause</span>
+                            </button>
+
+                            <button class="btn-finish-trip" onclick="finishAndSaveTrip()">
+                                <i class="bi bi-flag-fill"></i>
+                                <span>Finish & Save Journey</span>
+                            </button>
+                        </div>
+
+                    </div>
+
+                    <!-- RIGHT: Interactive Leaflet Map & Real-time Telemetry HUD -->
+                    <div class="tracking-map-wrapper">
+                        
+                        <!-- Map Container -->
+                        <div id="leafletMap"></div>
+
+                        <!-- Floating Live Telemetry HUD Strip -->
+                        <div class="telemetry-hud-strip">
+
+                            <div class="hud-item">
+                                <span class="hud-label"><i class="bi bi-speedometer2"></i> Speed</span>
+                                <div class="hud-value"><span id="hudSpeed">0.0</span> <small>km/h</small></div>
+                            </div>
+
+                            <div class="hud-item">
+                                <span class="hud-label"><i class="bi bi-signpost-split"></i> Distance</span>
+                                <div class="hud-value"><span id="hudDistance">0.00</span> <small>km</small></div>
+                            </div>
+
+                            <div class="hud-item">
+                                <span class="hud-label"><i class="bi bi-stopwatch"></i> Duration</span>
+                                <div class="hud-value"><span id="hudDuration">00:00:00</span></div>
+                            </div>
+
+                            <div class="hud-item passenger-focused">
+                                <span class="hud-label"><i class="bi bi-person-fill-check"></i> Passenger Share</span>
+                                <div class="hud-value"><span id="hudPassengerCarbon">0.00</span> <small>kg CO₂</small></div>
+                            </div>
+
+                            <div class="hud-item savings-focused">
+                                <span class="hud-label"><i class="bi bi-shield-check"></i> Avoided</span>
+                                <div class="hud-value"><span id="hudCarbonSaved">0.00</span> <small>kg CO₂</small></div>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- =====================================================
+                 ANALYTICS & BREAKDOWN CHARTS
+            ====================================================== -->
+            <section class="analytics-grid-two-col">
+
+                <!-- 1. Weekly Emissions Comparison (Gross vs Passenger Share vs Saved) -->
+                <div class="chart-card-box">
+                    <div class="card-title-row">
+                        <div>
+                            <h3>Weekly Passenger vs Gross Vehicle Emissions</h3>
+                            <span>Compares total tailpipe emissions against your allocated passenger footprint</span>
+                        </div>
+                        <span class="badge-pill-positive">
+                            <i class="bi bi-graph-up-arrow"></i> 7-Day Trend
+                        </span>
+                    </div>
+
+                    <div class="chart-container-rel">
+                        <canvas id="weeklyChartCanvas"></canvas>
+                    </div>
+                </div>
+
+                <!-- 2. Modal Breakdown (Donut Chart) -->
+                <div class="chart-card-box">
+                    <div class="card-title-row">
+                        <div>
+                            <h3>Emissions by Travel Mode</h3>
+                            <span>Distribution across vehicle categories</span>
+                        </div>
+                    </div>
+
+                    <div class="donut-stats-container">
+                        <div class="donut-chart-holder">
+                            <canvas id="modeDonutCanvas"></canvas>
+                        </div>
+                        <div class="breakdown-legend-list" id="donutLegendList">
+                            <!-- Populated dynamically via dashboard.js -->
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- =====================================================
+                 LOWER GRID: RECENT TRIPS & AI COACH
+            ====================================================== -->
+            <section class="lower-two-col">
+
+                <!-- Recent Recorded Trips -->
+                <div class="table-card-box">
+                    <div class="card-title-row">
+                        <div>
+                            <h3>Recent Recorded Journeys</h3>
+                            <span>Logged trips showing vehicle, passenger count, and allocated footprint</span>
+                        </div>
+                        <a href="/tracking" style="font-size: 12.5px; color: var(--primary); font-weight:600;">
+                            Live Tracker <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
+
+                    <div style="overflow-x: auto;">
+                        <table class="clean-table">
+                            <thead>
+                                <tr>
+                                    <th>Vehicle & Time</th>
+                                    <th>Occupancy</th>
+                                    <th>Distance</th>
+                                    <th>Gross Vehicle CO₂</th>
+                                    <th>Your Passenger Share</th>
+                                    <th>Carbon Saved</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recentTripsTbody">
+                                <!-- Populated dynamically from SQLite via dashboard.js -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- AI Eco-Coach Recommendation Card -->
+                <div class="ai-coach-card">
+                    <div>
+                        <div class="ai-coach-top">
+                            <div class="coach-sparkle-icon">
+                                <i class="bi bi-stars"></i>
+                            </div>
+                            <div class="coach-header-text">
+                                <strong>AI Eco-Coach Insights</strong>
+                                <span>Smart Travel Recommendation</span>
+                            </div>
+                        </div>
+
+                        <div class="coach-quote-box">
+                            "By carpooling with <strong>3 colleagues</strong> instead of driving solo, your personal passenger carbon footprint dropped from <strong>2.56 kg to 0.85 kg CO₂</strong> on your daily commute. That is a <strong>67% direct reduction</strong>!"
+                        </div>
+                    </div>
+
+                    <div class="coach-tips-pill">
+                        <i class="bi bi-lightbulb-fill"></i>
+                        <span>Tip: Public electric buses cut individual passenger emissions to under <strong>40g/km</strong>.</span>
+                    </div>
+                </div>
+
+            </section>
+
+        </div>
+
+    </main>
+
+</div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Tracking Engine & Dashboard Scripts -->
+<script src="{{ url_for('static', filename='js/location.js') }}"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+
+<script>
+    // Format today's date in header
+    document.addEventListener("DOMContentLoaded", () => {
+        const dateElem = document.getElementById("currentDateStr");
+        if (dateElem) {
+            const options = { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' };
+            dateElem.innerText = new Date().toLocaleDateString("en-US", options);
+        }
+    });
+</script>
+
+</body>
+</html>

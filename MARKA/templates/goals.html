@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MARKA | Sustainability Goals</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+</head>
+<body>
+
+<div class="app-layout">
+    <aside class="app-sidebar">
+        <div>
+            <div class="sidebar-header">
+                <div class="brand-wrapper">
+                    <div class="brand-logo-icon"><i class="bi bi-compass-fill"></i></div>
+                    <div class="brand-details">
+                        <strong>MARKA <span class="prototype-badge">PROTOTYPE</span></strong>
+                        <span class="brand-tagline">Every Journey Leaves a Mark.</span>
+                    </div>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section-title">INTELLIGENCE</div>
+                <a href="/dashboard" class="nav-item"><i class="bi bi-grid-1x2-fill"></i><span>Overview</span></a>
+                <a href="/tracking" class="nav-item"><i class="bi bi-geo-alt-fill"></i><span>Live Tracking</span></a>
+                <a href="/analytics" class="nav-item"><i class="bi bi-bar-chart-line-fill"></i><span>Analytics</span></a>
+                <div class="nav-section-title">MANAGEMENT</div>
+                <a href="/goals" class="nav-item active"><i class="bi bi-bullseye"></i><span>My Goals</span></a>
+                <a href="/challenges" class="nav-item"><i class="bi bi-trophy-fill"></i><span>Challenges</span></a>
+                <a href="/reports" class="nav-item"><i class="bi bi-file-earmark-bar-graph-fill"></i><span>Reports</span></a>
+            </nav>
+        </div>
+        <div class="sidebar-footer">
+            <div class="user-snippet">
+                <div class="user-avatar-badge">B</div>
+                <div class="user-text-info"><strong>Bharavi</strong><span>Eco Specialist</span></div>
+            </div>
+        </div>
+    </aside>
+
+    <main class="app-main">
+        <header class="topbar">
+            <div class="topbar-left">
+                <button class="mobile-menu-btn" id="mobileMenuBtn"><i class="bi bi-list"></i></button>
+                <div>
+                    <span class="breadcrumb-label">Management / Performance</span>
+                    <h2 class="topbar-page-title">Personal Sustainability Targets</h2>
+                </div>
+            </div>
+            <div class="topbar-right">
+                <a href="/dashboard" class="btn-primary-action"><i class="bi bi-grid-1x2-fill"></i> Back to Dashboard</a>
+            </div>
+        </header>
+
+        <div class="dashboard-container">
+            <div class="welcome-hero">
+                <div class="welcome-title-group">
+                    <h1>Active Monthly Goals</h1>
+                    <p>Track your milestone progress toward reduced passenger vehicle carbon footprint.</p>
+                </div>
+            </div>
+
+            <div class="kpi-cards-grid">
+                <div class="kpi-card highlight">
+                    <div class="kpi-header">
+                        <span class="kpi-label">CARPOOL OCCUPANCY GOAL</span>
+                        <div class="kpi-icon-badge emerald"><i class="bi bi-people-fill"></i></div>
+                    </div>
+                    <div class="kpi-value-row">
+                        <span class="kpi-value">75%</span>
+                        <span class="kpi-unit">Achieved</span>
+                    </div>
+                    <p style="font-size: 12px; color: var(--slate-500); margin-top: 8px;">Target: Share at least 3 out of 4 weekly commutes with 2+ passengers.</p>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <span class="kpi-label">MONTHLY EMISSIONS CEILING</span>
+                        <div class="kpi-icon-badge sky"><i class="bi bi-cloud-check-fill"></i></div>
+                    </div>
+                    <div class="kpi-value-row">
+                        <span class="kpi-value">18.4</span>
+                        <span class="kpi-unit">/ 35 kg CO₂</span>
+                    </div>
+                    <p style="font-size: 12px; color: var(--slate-500); margin-top: 8px;">You are currently 48% below your monthly emission limit.</p>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <span class="kpi-label">PUBLIC TRANSIT TRIPS</span>
+                        <div class="kpi-icon-badge indigo"><i class="bi bi-bus-front-fill"></i></div>
+                    </div>
+                    <div class="kpi-value-row">
+                        <span class="kpi-value">8</span>
+                        <span class="kpi-unit">/ 10 trips</span>
+                    </div>
+                    <p style="font-size: 12px; color: var(--slate-500); margin-top: 8px;">2 more transit rides needed to unlock the City Commuter badge.</p>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <span class="kpi-label">ACTIVE MOBILITY (KM)</span>
+                        <div class="kpi-icon-badge amber"><i class="bi bi-bicycle"></i></div>
+                    </div>
+                    <div class="kpi-value-row">
+                        <span class="kpi-value">14.6</span>
+                        <span class="kpi-unit">km walking/biking</span>
+                    </div>
+                    <p style="font-size: 12px; color: var(--slate-500); margin-top: 8px;">Zero emissions achieved for all local micro-trips under 2 km.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+    document.getElementById("mobileMenuBtn")?.addEventListener("click", () => {
+        document.querySelector(".app-sidebar")?.classList.toggle("mobile-open");
+    });
+</script>
+</body>
+</html>

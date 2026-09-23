@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MARKA | Live Vehicle Telemetry & Passenger Tracker</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+    <!-- Dashboard CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+
+    <style>
+        .cockpit-view-grid {
+            display: grid;
+            grid-template-columns: 340px 1fr;
+            gap: 20px;
+            height: calc(100vh - var(--topbar-height) - 40px);
+            min-height: 600px;
+        }
+
+        .cockpit-sidebar-deck {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            box-shadow: var(--shadow-md);
+            overflow-y: auto;
+        }
+
+        .cockpit-map-deck {
+            position: relative;
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+            display: flex;
+            flex-direction: column;
+        }
+
+        #leafletMapCockpit {
+            width: 100%;
+            flex: 1;
+            min-height: 400px;
+        }
+
+        .cockpit-top-hud {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            pointer-events: none;
+        }
+
+        .hud-glass-badge {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(12px);
+            color: #ffffff;
+            padding: 12px 18px;
+            border-radius: var(--radius-md);
+            pointer-events: auto;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .hud-glass-badge strong {
+            font-size: 20px;
+            font-family: 'Manrope', sans-serif;
+            color: #10b981;
+        }
+
+        .hud-glass-badge span {
+            font-size: 11px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-layout">
+
+    <!-- =====================================================
+         SIDEBAR NAVIGATION
+    ====================================================== -->
+    <aside class="app-sidebar">
+        <div>
+            <!-- Header Brand -->
+            <div class="sidebar-header">
+                <div class="brand-wrapper">
+                    <div class="brand-logo-icon">
+                        <i class="bi bi-compass-fill"></i>
+                    </div>
+                    <div class="brand-details">
+                        <strong>MARKA <span class="prototype-badge">PROTOTYPE</span></strong>
+                        <span class="brand-tagline">Every Journey Leaves a Mark.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="sidebar-nav">
+                <div class="nav-section-title">INTELLIGENCE</div>
+                
+                <a href="/dashboard" class="nav-item">
+                    <i class="bi bi-grid-1x2-fill"></i>
+                    <span>Overview</span>
+                </a>
+
+                <a href="/tracking" class="nav-item active">
+                    <i class="bi bi-geo-alt-fill"></i>
+                    <span>Live Tracking</span>
+                    <span class="live-beacon">
+                        <span class="beacon-pulse"></span>
+                        LIVE
+                    </span>
+                </a>
+
+                <a href="/analytics" class="nav-item">
+                    <i class="bi bi-bar-chart-line-fill"></i>
+                    <span>Analytics</span>
+                </a>
+
+                <div class="nav-section-title">MANAGEMENT</div>
+
+                <a href="/goals" class="nav-item">
+                    <i class="bi bi-bullseye"></i>
+                    <span>My Goals</span>
+                </a>
+
+                <a href="/challenges" class="nav-item">
+                    <i class="bi bi-trophy-fill"></i>
+                    <span>Challenges</span>
+                </a>
+
+                <a href="/reports" class="nav-item">
+                    <i class="bi bi-file-earmark-bar-graph-fill"></i>
+                    <span>Reports</span>
+                </a>
+            </nav>
+        </div>
+
+        <div class="sidebar-footer">
+            <div class="user-snippet">
+                <div class="user-avatar-badge">B</div>
+                <div class="user-text-info">
+                    <strong>Bharavi</strong>
+                    <span>Live Telemetry Pilot</span>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- =====================================================
+         MAIN CONTENT AREA
+    ====================================================== -->
+    <main class="app-main">
+
+        <!-- STICKY TOPBAR -->
+        <header class="topbar">
+            <div class="topbar-left">
+                <button class="mobile-menu-btn" id="mobileMenuBtn">
+                    <i class="bi bi-list"></i>
+                </button>
+                <div>
+                    <span class="breadcrumb-label">MARKA Prototype &bull; Environmental Intelligence</span>
+                    <h2 class="topbar-page-title">Real-Time Vehicle Passenger Tracker</h2>
+                </div>
+            </div>
+
+            <div class="topbar-right">
+                <!-- Location Pill Badge -->
+                <div class="location-pill-badge" id="topbarLocationBadge" onclick="autoRequestDeviceLocation()" title="Click to re-acquire device GPS">
+                    <i class="bi bi-geo-alt-fill"></i>
+                    <strong id="currentPlaceName">Locating near Dhule / Delhi...</strong>
+                </div>
+
+                <div class="live-pill-badge" id="topbarLiveStatusPill">
+                    <span class="status-dot"></span>
+                    <span id="liveStatusText">System Ready</span>
+                </div>
+
+                <a href="/dashboard" class="btn-secondary-action">
+                    <i class="bi bi-arrow-left"></i>
+                    <span>Back to Dashboard</span>
+                </a>
+            </div>
+        </header>
+
+        <!-- COCKPIT CONTENT -->
+        <div class="dashboard-container" style="padding-bottom: 24px;">
+
+            <div class="cockpit-view-grid">
+
+                <!-- LEFT CONTROLS -->
+                <div class="cockpit-sidebar-deck">
+
+                    <!-- 1. JOURNEY ROUTE PLANNER -->
+                    <div class="route-planner-card" style="margin-bottom: 0;">
+                        <div class="config-group-title">
+                            <span>Journey Route Planner</span>
+                            <i class="bi bi-geo-alt" title="Enter starting point and ending destination"></i>
+                        </div>
+
+                        <div class="route-input-group">
+                            <!-- Origin Input Container -->
+                            <div>
+                                <div class="route-input-row">
+                                    <i class="bi bi-geo-alt-fill route-input-icon origin"></i>
+                                    <input type="text" id="originInput" class="route-input-field" value="Dhule, Maharashtra" placeholder="Starting location (e.g. Dhule)..." autocomplete="off">
+                                    <div style="position: absolute; right: 6px; display: flex; align-items: center; gap: 3px;">
+                                        <button type="button" class="route-input-action-btn" onclick="activateMapPicker('origin')" title="Click & Pick on Map" style="position: static;">
+                                            <i class="bi bi-pin-map-fill"></i>
+                                        </button>
+                                        <button type="button" class="route-input-action-btn" onclick="autoRequestDeviceLocation()" title="Detect current GPS device location" style="position: static;">
+                                            <i class="bi bi-crosshair"></i>
+                                        </button>
+                                    </div>
+                                    <!-- Autocomplete Dropdown -->
+                                    <div id="originDropdown" class="location-autocomplete-dropdown"></div>
+                                </div>
+                                <div id="originVerifiedTag" class="verified-location-tag">
+                                    <i class="bi bi-check-circle-fill"></i> <span id="originVerifiedText">Verified: Dhule, Maharashtra (20.904°N, 74.775°E)</span>
+                                </div>
+                            </div>
+
+                            <!-- Route Corridor Header & Swap -->
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin:-2px 6px -2px 0;">
+                                <span style="font-size:10px; color:var(--slate-400); font-weight:700; letter-spacing:0.4px;">HIGHWAY CORRIDOR</span>
+                                <button type="button" onclick="swapLocations()" style="background:none; border:none; cursor:pointer; font-size:11px; font-weight:600; color:var(--primary); display:flex; align-items:center; gap:3px;">
+                                    <i class="bi bi-arrow-down-up"></i> Swap
+                                </button>
+                            </div>
+
+                            <!-- Destination Input Container -->
+                            <div>
+                                <div class="route-input-row">
+                                    <i class="bi bi-flag-fill route-input-icon destination"></i>
+                                    <input type="text" id="destInput" class="route-input-field" value="New Delhi, Delhi" placeholder="Choose destination (e.g. Delhi, Nashik, Pune)..." autocomplete="off">
+                                    <button type="button" class="route-input-action-btn" onclick="activateMapPicker('dest')" title="Click & Pick on Map" style="right: 6px;">
+                                        <i class="bi bi-pin-map-fill"></i>
+                                    </button>
+                                    <!-- Autocomplete Dropdown -->
+                                    <div id="destDropdown" class="location-autocomplete-dropdown"></div>
+                                </div>
+                                <div id="destVerifiedTag" class="verified-location-tag">
+                                    <i class="bi bi-check-circle-fill"></i> <span id="destVerifiedText">Verified: New Delhi, Delhi (28.614°N, 77.209°E)</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Quick Destination Pills -->
+                        <div class="popular-destinations-row">
+                            <span class="dest-chip active" onclick="fillDestination('Delhi')">📍 Delhi NCR</span>
+                            <span class="dest-chip" onclick="fillDestination('Nashik')">📍 Nashik (158 km)</span>
+                            <span class="dest-chip" onclick="fillDestination('Mumbai')">📍 Mumbai (325 km)</span>
+                            <span class="dest-chip" onclick="fillDestination('Pune')">📍 Pune (335 km)</span>
+                            <span class="dest-chip" onclick="fillDestination('Indore')">📍 Indore (260 km)</span>
+                        </div>
+
+                        <!-- Road Route Traced Summary Card -->
+                        <div id="roadRouteSummaryCard" class="road-route-summary-card" style="display: none;">
+                            <div class="route-badge-text">
+                                <i class="bi bi-signpost-2-fill"></i>
+                                <span><strong id="roadRouteSummaryDist">984 km</strong> (<span id="roadRouteSummaryTime">~11h</span>)</span>
+                            </div>
+                            <div class="route-meta-text" id="roadRouteSummaryVia">via NH 52 & NH 48</div>
+                        </div>
+
+                        <button class="btn-plan-route" onclick="planCustomJourney()">
+                            <i class="bi bi-map-fill"></i>
+                            <span>Trace Road Network & Calculate</span>
+                        </button>
+                    </div>
+
+                    <!-- 2. REAL-TIME TRAVEL TELEMETRY & EMISSION MONITOR -->
+                    <div class="live-telemetry-deck">
+                        <div class="telemetry-deck-header">
+                            <div class="telemetry-deck-badge">
+                                <span class="pulse-circle"></span>
+                                <span>Live Travel Telemetry</span>
+                            </div>
+                            <span class="badge-pill-positive" style="font-size: 10px; padding: 2px 7px;">
+                                Continuous Monitoring
+                            </span>
+                        </div>
+
+                        <!-- Telemetry 2x2 Grid -->
+                        <div class="telemetry-vitals-grid">
+                            <div class="vital-tile">
+                                <div class="vital-tile-label">
+                                    <i class="bi bi-activity" style="color: #38bdf8;"></i> Emission Rate
+                                </div>
+                                <div class="vital-tile-number rate">
+                                    <span id="vitalBurnRate">0</span> <span class="vital-tile-unit">g/min</span>
+                                </div>
+                            </div>
+
+                            <div class="vital-tile">
+                                <div class="vital-tile-label">
+                                    <i class="bi bi-fire" style="color: #34d399;"></i> Your Footprint
+                                </div>
+                                <div class="vital-tile-number footprint">
+                                    <span id="vitalPassengerCarbon">0.00</span> <span class="vital-tile-unit">kg CO₂</span>
+                                </div>
+                            </div>
+
+                            <div class="vital-tile">
+                                <div class="vital-tile-label">
+                                    <i class="bi bi-signpost-split"></i> Total Corridor
+                                </div>
+                                <div class="vital-tile-number">
+                                    <span id="plannedDistanceDisplay">1,040 km</span>
+                                </div>
+                            </div>
+
+                            <div class="vital-tile">
+                                <div class="vital-tile-label">
+                                    <i class="bi bi-calculator"></i> Est. Trip Total
+                                </div>
+                                <div class="vital-tile-number">
+                                    <span id="vitalTripEstimatedFootprint">93.6 kg</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Route Progress Bar -->
+                        <div class="journey-progress-labels">
+                            <span id="originCityLabel">Dhule</span>
+                            <span id="journeyProgressKm">0.0 / 1040 km (<span id="journeyProgressPct">0%</span>)</span>
+                            <span id="destCityLabel">Delhi</span>
+                        </div>
+                        <div class="journey-progress-track">
+                            <div class="journey-progress-fill" id="journeyProgressFill"></div>
+                        </div>
+                    </div>
+
+                    <!-- 3. VEHICLE CONFIGURATION -->
+                    <div>
+                        <div class="config-group-title">
+                            <span>Vehicle Configuration</span>
+                        </div>
+                        <div class="vehicle-selector-grid">
+                            <button class="vehicle-btn selected" data-vehicle="petrol_sedan" onclick="selectVehicle('petrol_sedan')">
+                                <div class="vehicle-btn-top">
+                                    <i class="bi bi-car-front-fill"></i>
+                                    <span class="vehicle-rate-pill">180g/km</span>
+                                </div>
+                                <span class="vehicle-name-label">Sedan Petrol</span>
+                            </button>
+
+                            <button class="vehicle-btn" data-vehicle="diesel_suv" onclick="selectVehicle('diesel_suv')">
+                                <div class="vehicle-btn-top">
+                                    <i class="bi bi-truck-front-fill"></i>
+                                    <span class="vehicle-rate-pill">230g/km</span>
+                                </div>
+                                <span class="vehicle-name-label">Diesel SUV</span>
+                            </button>
+
+                            <button class="vehicle-btn" data-vehicle="hybrid_car" onclick="selectVehicle('hybrid_car')">
+                                <div class="vehicle-btn-top">
+                                    <i class="bi bi-ev-front-fill"></i>
+                                    <span class="vehicle-rate-pill">105g/km</span>
+                                </div>
+                                <span class="vehicle-name-label">Hybrid Car</span>
+                            </button>
+
+                            <button class="vehicle-btn" data-vehicle="electric_car" onclick="selectVehicle('electric_car')">
+                                <div class="vehicle-btn-top">
+                                    <i class="bi bi-lightning-charge-fill"></i>
+                                    <span class="vehicle-rate-pill">45g/km</span>
+                                </div>
+                                <span class="vehicle-name-label">Electric EV</span>
+                            </button>
+
+                            <button class="vehicle-btn" data-vehicle="public_bus" onclick="selectVehicle('public_bus')">
+                                <div class="vehicle-btn-top">
+                                    <i class="bi bi-bus-front-fill"></i>
+                                    <span class="vehicle-rate-pill">1150g/km</span>
+                                </div>
+                                <span class="vehicle-name-label">Public Bus</span>
+                            </button>
+
+                            <button class="vehicle-btn" data-vehicle="motorbike" onclick="selectVehicle('motorbike')">
+                                <div class="vehicle-btn-top">
+                                    <i class="bi bi-bicycle"></i>
+                                    <span class="vehicle-rate-pill">95g/km</span>
+                                </div>
+                                <span class="vehicle-name-label">Motorbike</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 4. PASSENGER COUNT STEPPER -->
+                    <div class="occupancy-card">
+                        <div class="config-group-title" style="margin-bottom: 4px;">
+                            <span>Vehicle Occupancy</span>
+                            <span style="font-size: 10px; color: #059669; font-weight:700;">ACTIVE PASSENGERS</span>
+                        </div>
+
+                        <div class="occupancy-stepper">
+                            <button class="stepper-btn" onclick="updatePassengerCount(-1)">
+                                <i class="bi bi-dash"></i>
+                            </button>
+
+                            <div class="occupancy-display">
+                                <div class="occupancy-count" id="passengerCountDisplay">2</div>
+                                <span>Occupants Sharing Ride</span>
+                            </div>
+
+                            <button class="stepper-btn" onclick="updatePassengerCount(1)">
+                                <i class="bi bi-plus"></i>
+                            </button>
+                        </div>
+
+                        <div class="passenger-icons-row" id="passengerIconsRow"></div>
+
+                        <div class="passenger-allocation-math" id="passengerMathDisplay">
+                            <span>Vehicle emits <strong>180g CO₂/km</strong>.</span><br>
+                            <span>Shared by <strong>2 passengers</strong> = <strong>90g CO₂/km</strong> per person.</span>
+                        </div>
+                    </div>
+
+                    <!-- 5. ACTION BUTTONS -->
+                    <div class="tracking-trigger-buttons" id="trackingTriggerButtons">
+                        <button class="btn-simulate-drive" onclick="startSimulatedDrive()">
+                            <i class="bi bi-play-circle-fill"></i>
+                            <span>Start Live Journey Tracking</span>
+                        </button>
+
+                        <button class="btn-start-gps" onclick="startLiveGpsTracking()">
+                            <i class="bi bi-crosshair"></i>
+                            <span>Start Real Device GPS</span>
+                        </button>
+                    </div>
+
+                    <div class="btn-active-actions" id="trackingActiveActions">
+                        <button class="btn-pause-tracking" id="btnPauseTracking" onclick="pauseTracking()">
+                            <i class="bi bi-pause-fill"></i>
+                            <span>Pause</span>
+                        </button>
+
+                        <button class="btn-finish-trip" onclick="finishAndSaveTrip()">
+                            <i class="bi bi-flag-fill"></i>
+                            <span>Save & Exit</span>
+                        </button>
+                    </div>
+
+                </div>
+
+                <!-- RIGHT MAP & HUD -->
+                <div class="cockpit-map-deck">
+
+                    <!-- Floating Cockpit Glass HUD -->
+                    <div class="cockpit-top-hud">
+                        <div class="hud-glass-badge">
+                            <div>
+                                <span>Passenger Share</span>
+                                <div><strong id="hudPassengerCarbonTop">0.00</strong> <small style="color: #cbd5e1;">kg CO₂</small></div>
+                            </div>
+                        </div>
+
+                        <div class="hud-glass-badge">
+                            <div>
+                                <span>Avoided vs Solo</span>
+                                <div><strong id="hudCarbonSavedTop" style="color: #38bdf8;">0.00</strong> <small style="color: #cbd5e1;">kg CO₂</small></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Map -->
+                    <div id="leafletMap"></div>
+
+                    <!-- Lower HUD -->
+                    <div class="telemetry-hud-strip">
+                        <div class="hud-item">
+                            <span class="hud-label"><i class="bi bi-speedometer2"></i> Speed</span>
+                            <div class="hud-value"><span id="hudSpeed">0.0</span> <small>km/h</small></div>
+                        </div>
+
+                        <div class="hud-item">
+                            <span class="hud-label"><i class="bi bi-signpost-split"></i> Distance</span>
+                            <div class="hud-value"><span id="hudDistance">0.00</span> <small>km</small></div>
+                        </div>
+
+                        <div class="hud-item">
+                            <span class="hud-label"><i class="bi bi-stopwatch"></i> Duration</span>
+                            <div class="hud-value"><span id="hudDuration">00:00:00</span></div>
+                        </div>
+
+                        <div class="hud-item passenger-focused">
+                            <span class="hud-label"><i class="bi bi-person-fill-check"></i> Passenger Share</span>
+                            <div class="hud-value"><span id="hudPassengerCarbon">0.00</span> <small>kg CO₂</small></div>
+                        </div>
+
+                        <div class="hud-item savings-focused">
+                            <span class="hud-label"><i class="bi bi-shield-check"></i> Gross Vehicle</span>
+                            <div class="hud-value"><span id="hudVehicleCarbon">0.00</span> <small>kg CO₂</small></div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+</div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<!-- Tracking Engine Script -->
+<script src="{{ url_for('static', filename='js/location.js') }}"></script>
+
+<script>
+    // Sync cockpit glass HUD elements
+    const origUpdate = updateHUDandKPIs;
+    updateHUDandKPIs = function() {
+        origUpdate();
+        safeSetText("hudPassengerCarbonTop", TrackerState.passengerCarbonKg.toFixed(2));
+        safeSetText("hudCarbonSavedTop", TrackerState.carbonSavedKg.toFixed(2));
+    };
+
+    // Mobile menu toggle
+    document.addEventListener("DOMContentLoaded", () => {
+        const mobileMenuBtn = document.getElementById("mobileMenuBtn");
+        const sidebar = document.querySelector(".app-sidebar");
+        if (mobileMenuBtn && sidebar) {
+            mobileMenuBtn.addEventListener("click", () => {
+                sidebar.classList.toggle("mobile-open");
+            });
+        }
+    });
+</script>
+
+</body>
+</html>

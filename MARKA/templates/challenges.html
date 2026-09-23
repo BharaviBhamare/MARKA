@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MARKA | Community Eco Challenges</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+</head>
+<body>
+
+<div class="app-layout">
+    <aside class="app-sidebar">
+        <div>
+            <div class="sidebar-header">
+                <div class="brand-wrapper">
+                    <div class="brand-logo-icon"><i class="bi bi-compass-fill"></i></div>
+                    <div class="brand-details">
+                        <strong>MARKA <span class="prototype-badge">PROTOTYPE</span></strong>
+                        <span class="brand-tagline">Every Journey Leaves a Mark.</span>
+                    </div>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section-title">INTELLIGENCE</div>
+                <a href="/dashboard" class="nav-item"><i class="bi bi-grid-1x2-fill"></i><span>Overview</span></a>
+                <a href="/tracking" class="nav-item"><i class="bi bi-geo-alt-fill"></i><span>Live Tracking</span></a>
+                <a href="/analytics" class="nav-item"><i class="bi bi-bar-chart-line-fill"></i><span>Analytics</span></a>
+                <div class="nav-section-title">MANAGEMENT</div>
+                <a href="/goals" class="nav-item"><i class="bi bi-bullseye"></i><span>My Goals</span></a>
+                <a href="/challenges" class="nav-item active"><i class="bi bi-trophy-fill"></i><span>Challenges</span></a>
+                <a href="/reports" class="nav-item"><i class="bi bi-file-earmark-bar-graph-fill"></i><span>Reports</span></a>
+            </nav>
+        </div>
+        <div class="sidebar-footer">
+            <div class="user-snippet">
+                <div class="user-avatar-badge">B</div>
+                <div class="user-text-info"><strong>Bharavi</strong><span>Eco Specialist</span></div>
+            </div>
+        </div>
+    </aside>
+
+    <main class="app-main">
+        <header class="topbar">
+            <div class="topbar-left">
+                <button class="mobile-menu-btn" id="mobileMenuBtn"><i class="bi bi-list"></i></button>
+                <div>
+                    <span class="breadcrumb-label">Community / Gamification</span>
+                    <h2 class="topbar-page-title">Sustainability Challenges</h2>
+                </div>
+            </div>
+            <div class="topbar-right">
+                <a href="/dashboard" class="btn-primary-action"><i class="bi bi-grid-1x2-fill"></i> Back to Dashboard</a>
+            </div>
+        </header>
+
+        <div class="dashboard-container">
+            <div class="welcome-hero">
+                <div class="welcome-title-group">
+                    <h1>Leaderboard & Active Challenges</h1>
+                    <p>Compete with friends, colleagues, and commuters to slash transportation emissions.</p>
+                </div>
+            </div>
+
+            <div class="analytics-grid-two-col">
+                <div class="chart-card-box">
+                    <div class="card-title-row">
+                        <div>
+                            <h3>Active Team Challenges</h3>
+                            <span>This week's community goals</span>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 14px; margin-top: 10px;">
+                        <div style="background: var(--slate-50); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 16px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <strong style="font-size: 14px; color: var(--slate-900);"><i class="bi bi-car-front-fill" style="color: #059669; margin-right: 6px;"></i> 100km Carpool Master</strong>
+                                <span class="saved-pill">450 XP</span>
+                            </div>
+                            <p style="font-size: 12px; color: var(--slate-500); margin-bottom: 10px;">Complete 100 km of shared passenger travel this week.</p>
+                            <div class="tier-progress-track"><div class="tier-progress-fill" style="width: 72%;"></div></div>
+                            <small style="font-size: 10.5px; color: var(--slate-500); display: block; margin-top: 4px;">72.0 km / 100 km completed</small>
+                        </div>
+
+                        <div style="background: var(--slate-50); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 16px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <strong style="font-size: 14px; color: var(--slate-900);"><i class="bi bi-lightning-charge-fill" style="color: #6366f1; margin-right: 6px;"></i> EV Commute Champion</strong>
+                                <span class="saved-pill">600 XP</span>
+                            </div>
+                            <p style="font-size: 12px; color: var(--slate-500); margin-bottom: 10px;">Take 5 trips in Electric or Hybrid vehicles with 2+ passengers.</p>
+                            <div class="tier-progress-track"><div class="tier-progress-fill" style="width: 100%; background: #6366f1;"></div></div>
+                            <small style="font-size: 10.5px; color: #059669; font-weight:700; display: block; margin-top: 4px;">Completed! Badge Awarded.</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-card-box">
+                    <div class="card-title-row">
+                        <div>
+                            <h3>Office Eco Leaderboard</h3>
+                            <span>Ranked by passenger carbon saved</span>
+                        </div>
+                    </div>
+
+                    <table class="clean-table">
+                        <thead>
+                            <tr>
+                                <th>Rank & Member</th>
+                                <th>Avg Occupancy</th>
+                                <th>Carbon Avoided</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>🥇 Bharavi</strong></td>
+                                <td>3.2 pass</td>
+                                <td><span class="saved-pill">+28.4 kg</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>🥈 Sarah Chen</strong></td>
+                                <td>2.8 pass</td>
+                                <td><span class="saved-pill">+22.1 kg</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>🥉 Marcus Vance</strong></td>
+                                <td>2.5 pass</td>
+                                <td><span class="saved-pill">+19.5 kg</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>4. David Kim</strong></td>
+                                <td>2.0 pass</td>
+                                <td><span class="saved-pill">+14.2 kg</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+    document.getElementById("mobileMenuBtn")?.addEventListener("click", () => {
+        document.querySelector(".app-sidebar")?.classList.toggle("mobile-open");
+    });
+</script>
+</body>
+</html>
